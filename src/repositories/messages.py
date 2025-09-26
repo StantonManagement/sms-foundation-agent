@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional, Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -84,3 +84,28 @@ class MessageRepository:
         res = await self.session.execute(stmt)
         # scalars().all() returns list[SmsMessage]
         return list(res.scalars().all())
+
+    async def list_paginated_with_total(
+        self, conversation_id: int, *, limit: int = 20, offset: int = 0
+    ) -> tuple[list[SmsMessage], int]:
+        """Return (items, total) for a conversation, ordered by created_at desc.
+
+        Provides a total item count for UI pagination displays.
+        """
+        items_stmt = (
+            select(SmsMessage)
+            .where(SmsMessage.conversation_id == conversation_id)
+            .order_by(SmsMessage.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        total_stmt = select(func.count()).select_from(
+            select(SmsMessage.id)
+            .where(SmsMessage.conversation_id == conversation_id)
+            .subquery()
+        )
+        items_res = await self.session.execute(items_stmt)
+        total_res = await self.session.execute(total_stmt)
+        items = list(items_res.scalars().all())
+        total = int(total_res.scalar() or 0)
+        return items, total

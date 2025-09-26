@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     twilio_auth_token: str = Field(default="", alias="TWILIO_AUTH_TOKEN")
     # Database URL for async SQLAlchemy engine. Default to local SQLite file for dev/test.
     database_url: str = Field(default="sqlite+aiosqlite:///./app.db", alias="DATABASE_URL")
+    # Collections Monitor base URL for tenant lookup
+    monitor_api_url: str = Field(default="", alias="MONITOR_API_URL")
 
     model_config = SettingsConfigDict(
         env_file=".env",

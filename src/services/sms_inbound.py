@@ -9,7 +9,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from src.repositories.messages import MessageRepository
 from src.repositories.conversations import ConversationRepository
 from src.services.language_detector import LanguageDetector
-from src.utils.phone import normalize_phone
+from src.utils.phone import normalize_phone, variants
+from src.adapters.monitor_client import TenantLookupClient
+from src.utils.config import get_settings
 
 
 logger = structlog.get_logger(__name__)
@@ -80,6 +82,54 @@ class SmsInboundService:
                     twilio_sid=sid,
                 )
                 return {"processed": False, "duplicate": False}
+
+        # Attempt tenant lookup via Collections Monitor using phone variants
+        if conversation_id is not None and from_number:
+            settings = get_settings()
+            v = variants(from_number)
+            client = TenantLookupClient(settings.monitor_api_url)
+            match = None
+            try:
+                match = await client.lookup(v)
+            except Exception:
+                # Errors in the client are swallowed; continue webhook path
+                logger.warning(
+                    "tenant_lookup_error",
+                    request_id=request_id,
+                    route="/webhook/twilio/sms",
+                    twilio_sid=sid,
+                    phone=from_number,
+                )
+            if match:
+                try:
+                    await conv_repo.set_tenant(conversation_id, match.tenant_id)
+                    if phone_canon:
+                        await conv_repo.track_last_used_number(match.tenant_id, phone_canon)
+                    logger.info(
+                        "tenant_lookup_outcome",
+                        request_id=request_id,
+                        route="/webhook/twilio/sms",
+                        twilio_sid=sid,
+                        phone=from_number,
+                        monitor_outcome="found",
+                        tenant_id=match.tenant_id,
+                    )
+                except SQLAlchemyError:
+                    logger.warning(
+                        "inbound_sms_db_unavailable",
+                        request_id=request_id,
+                        route="/webhook/twilio/sms",
+                        twilio_sid=sid,
+                    )
+            else:
+                logger.info(
+                    "tenant_lookup_outcome",
+                    request_id=request_id,
+                    route="/webhook/twilio/sms",
+                    twilio_sid=sid,
+                    phone=from_number,
+                    monitor_outcome="not_found",
+                )
 
         # Insert full message with unique constraint guard for race-safety
         try:

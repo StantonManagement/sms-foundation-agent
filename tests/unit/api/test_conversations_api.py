@@ -89,6 +89,12 @@ def test_get_conversation_found_with_normalization(session_maker):
     body = res.json()
     assert body["phone_number_canonical"] == "+15555550100"
     assert len(body["messages"]) == 1
+    # Contract: include content (alias of message_content), and pagination echoes
+    assert body["messages"][0]["content"] == "hello"
+    assert body["page"] == 1
+    assert body["limit"] == 20
+    assert body["offset"] == 0
+    assert body["total"] == 1
 
 
 def test_get_conversation_ordering_and_pagination(session_maker):
@@ -146,20 +152,43 @@ def test_get_conversation_ordering_and_pagination(session_maker):
         # Query ordering desc default limit
         res1 = client.get("/conversations/+15555550200")
         assert res1.status_code == 200
-        msgs = res1.json()["messages"]
+        body1 = res1.json()
+        msgs = body1["messages"]
         assert [m["message_content"] for m in msgs] == ["m3", "m2", "m1"]
+        assert body1["total"] == 3
+        assert body1["page"] == 1 and body1["limit"] == 20 and body1["offset"] == 0
 
         # Pagination: limit 2
         res2 = client.get("/conversations/+15555550200?limit=2")
         assert res2.status_code == 200
-        msgs2 = res2.json()["messages"]
+        body2 = res2.json()
+        msgs2 = body2["messages"]
         assert [m["message_content"] for m in msgs2] == ["m3", "m2"]
+        assert body2["total"] == 3
+        assert body2["page"] == 1 and body2["limit"] == 2 and body2["offset"] == 0
 
         # Pagination with offset 1
         res3 = client.get("/conversations/+15555550200?limit=2&offset=1")
         assert res3.status_code == 200
-        msgs3 = res3.json()["messages"]
+        body3 = res3.json()
+        msgs3 = body3["messages"]
         assert [m["message_content"] for m in msgs3] == ["m2", "m1"]
+        assert body3["total"] == 3
+        assert body3["page"] == 1 and body3["limit"] == 2 and body3["offset"] == 1
 
-    anyio.run(_setup_and_query)
 
+def test_get_conversation_empty_messages(session_maker):
+    client = TestClient(app)
+
+    async def _setup():
+        async with session_maker() as session:  # type: ignore[misc]
+            conv_repo = ConversationRepository(session)
+            await conv_repo.upsert_by_phone(original="+1 555 555 0300", canon="+15555550300")
+
+    anyio.run(_setup)
+
+    res = client.get("/conversations/+15555550300")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["messages"] == []
+    assert body["total"] == 0

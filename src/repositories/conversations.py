@@ -52,3 +52,26 @@ class ConversationRepository:
         await self.session.execute(stmt)
         await self.session.commit()
 
+    async def set_tenant(self, id: int, tenant_id: str | None) -> None:
+        """Set tenant_id for a conversation."""
+        stmt = (
+            update(SmsConversation)
+            .where(SmsConversation.id == id)
+            .values(tenant_id=tenant_id)
+        )
+        await self.session.execute(stmt)
+        await self.session.commit()
+
+    async def track_last_used_number(self, tenant_id: str, phone_canonical: str) -> None:
+        """Associate tenant with this phone's conversation for 'last used' tracking.
+
+        Current implementation sets tenant_id on the conversation identified by the
+        canonical phone. Future enhancement may move to a dedicated mapping table.
+        """
+        stmt = (
+            update(SmsConversation)
+            .where(SmsConversation.phone_number_canonical == phone_canonical)
+            .values(tenant_id=tenant_id)
+        )
+        await self.session.execute(stmt)
+        await self.session.commit()

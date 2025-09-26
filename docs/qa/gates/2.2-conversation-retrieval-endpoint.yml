@@ -1,0 +1,33 @@
+# <!-- Powered by BMAD™ Core -->
+schema: 1
+story: "2.2"
+story_title: "Conversation Retrieval Endpoint"
+gate: "PASS"  # PASS|CONCERNS|FAIL|WAIVED
+status_reason: "Contract aligned and coverage improved: added 'content' alias per AC, added empty-list and pagination/total assertions in route tests, and bound request_id in logs when present. All tests passing."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-09-26T00:00:04Z"
+
+waiver: { active: false }
+
+top_issues:
+  - id: "API-001"
+    severity: medium
+    finding: "RESOLVED: Added 'content' alias while retaining compatibility; consider documenting extra fields if retained."
+    suggested_action: "Document response shape in API docs if keeping extra fields (id/from/to)."
+  - id: "TEST-001"
+    severity: medium
+    finding: "RESOLVED: Added route tests for empty list and pagination with total/page/limit/offset assertions."
+    suggested_action: "Maintain tests as contract to prevent regressions."
+  - id: "OBS-001"
+    severity: low
+    finding: "RESOLVED: request_id now bound in logs when present."
+    suggested_action: "Introduce request-id middleware to guarantee presence across routes."
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 2, low: 1 }
+  recommendations:
+    must_fix:
+      - "Align response contract with AC (field names and documented fields)"
+      - "Add pagination and empty-list route tests"
+    monitor:
+      - "Ensure logging context includes request_id for traceability"
