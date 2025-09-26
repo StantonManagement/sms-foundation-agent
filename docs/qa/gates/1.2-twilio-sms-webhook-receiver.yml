@@ -1,0 +1,33 @@
+# <!-- Powered by BMAD™ Core -->
+schema: 1
+story: "1.2"
+story_title: "Twilio SMS Webhook Receiver with Signature Verification"
+gate: "PASS"  # PASS|CONCERNS|FAIL|WAIVED
+status_reason: "All ACs met; tests pass; implementation verifies Twilio signature correctly, responds quickly, and logs with correlation. Low risk for this scope."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-09-26T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues:
+  - id: "SIG-001"
+    severity: low
+    finding: "Possible signature mismatches behind reverse proxies if URL reconstruction differs from Twilio's canonical URL."
+    suggested_action: "Document required proxy headers and/or reconstruct URL from X-Forwarded-* when present."
+  - id: "CFG-001"
+    severity: low
+    finding: "Empty TWILIO_AUTH_TOKEN would cause all webhooks to be rejected at runtime."
+    suggested_action: "Enforce non-empty token at startup (fail fast) outside local."
+  - id: "OBS-001"
+    severity: low
+    finding: "Request ID generated in handler may differ from any global request id used elsewhere."
+    suggested_action: "Adopt middleware-provided request id for consistent correlation."
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 3 }
+  recommendations:
+    must_fix: []
+    monitor:
+      - "Proxy-aware signature handling in deployed environments"
+      - "Startup validation for required secrets in non-local envs"
+

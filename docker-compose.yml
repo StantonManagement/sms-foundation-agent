@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  app:
+    build: .
+    image: sms-foundation-agent:dev
+    environment:
+      - APP_ENV=local
+      - APP_VERSION=0.1.0
+    ports:
+      - "8000:8000"
+    command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./src:/app/src:rw
+    # depends_on:
+    #   - db
+
+  # Optional Postgres for later stories
+  # db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     - POSTGRES_USER=app
+  #     - POSTGRES_PASSWORD=app
+  #     - POSTGRES_DB=app
+  #   ports:
+  #     - "5432:5432"
+

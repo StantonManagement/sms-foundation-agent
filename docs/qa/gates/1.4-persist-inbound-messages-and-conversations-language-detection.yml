@@ -1,0 +1,19 @@
+# <!-- Powered by BMAD™ Core -->
+schema: 1
+story: "1.4"
+story_title: "Persist Inbound Messages and Conversations + Baseline Language Detection"
+gate: "PASS"  # PASS|CONCERNS|FAIL|WAIVED
+status_reason: "All previously flagged gaps resolved: language heuristics and conversations API tests added and passing; Alembic migration present; dependencies updated; Portuguese regex corrected."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-09-26T00:00:01Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  recommendations:
+    must_fix: []
+    monitor:
+      - "Validate normalization behavior in production and confirm migrations applied"

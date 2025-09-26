@@ -1,0 +1,11 @@
+fastapi>=0.111,<0.112
+uvicorn[standard]>=0.30,<0.31
+pydantic>=2.8,<3
+pydantic-settings>=2.5,<3
+structlog>=24.1,<25
+sqlalchemy>=2.0,<3
+aiosqlite>=0.19,<1
+greenlet>=3.0,<4
+phonenumbers>=8.13,<9
+alembic>=1.13,<2
+asyncpg>=0.29,<1
