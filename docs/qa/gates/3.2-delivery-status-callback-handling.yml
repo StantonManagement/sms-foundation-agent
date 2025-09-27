@@ -1,0 +1,19 @@
+# <!-- Powered by BMAD™ Core -->
+schema: 1
+story: "3.2"
+story_title: "Delivery Status Callback Handling"
+gate: "PASS" # PASS|CONCERNS|FAIL|WAIVED
+status_reason: "All ACs met with tests; secure signature verification and idempotent status/event handling; no blocking issues."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-09-27T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues: []
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  recommendations:
+    must_fix: []
+    monitor:
+      - "Document external URL considerations for Twilio signature behind proxies"

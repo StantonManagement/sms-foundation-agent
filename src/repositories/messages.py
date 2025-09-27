@@ -20,6 +20,11 @@ class MessageRepository:
         res = await self.session.execute(stmt)
         return res.scalar_one_or_none()
 
+    async def get_by_id(self, id: int) -> Optional[SmsMessage]:
+        stmt = select(SmsMessage).where(SmsMessage.id == id)
+        res = await self.session.execute(stmt)
+        return res.scalar_one_or_none()
+
     async def insert_inbound_minimal(self, sid: str) -> tuple[SmsMessage | None, bool]:
         """Insert a minimal inbound message row.
 
@@ -109,3 +114,70 @@ class MessageRepository:
         items = list(items_res.scalars().all())
         total = int(total_res.scalar() or 0)
         return items, total
+
+    # Outbound helpers
+    async def insert_outbound_pending(
+        self,
+        *,
+        conversation_id: int | None,
+        to_number: str,
+        body: str,
+    ) -> SmsMessage:
+        entity = SmsMessage(
+            conversation_id=conversation_id,
+            direction="outbound",
+            to_number=to_number,
+            message_content=body,
+            delivery_status="pending",
+        )
+        self.session.add(entity)
+        await self.session.commit()
+        await self.session.refresh(entity)
+        return entity
+
+    async def set_sent_result(
+        self,
+        message_id: int,
+        twilio_sid: str,
+        *,
+        status: str = "queued",
+    ) -> None:
+        stmt = (
+            select(SmsMessage)
+            .where(SmsMessage.id == message_id)
+            .limit(1)
+        )
+        res = await self.session.execute(stmt)
+        entity = res.scalar_one_or_none()
+        if not entity:
+            return
+        entity.twilio_sid = twilio_sid
+        entity.delivery_status = status
+        await self.session.commit()
+
+    async def set_failed_result(self, message_id: int, *, status: str = "failed") -> None:
+        stmt = (
+            select(SmsMessage)
+            .where(SmsMessage.id == message_id)
+            .limit(1)
+        )
+        res = await self.session.execute(stmt)
+        entity = res.scalar_one_or_none()
+        if not entity:
+            return
+        entity.delivery_status = status
+        await self.session.commit()
+
+    async def update_status(self, message_id: int, new_status: str) -> None:
+        """Set delivery_status on a message id and commit."""
+        stmt = (
+            select(SmsMessage)
+            .where(SmsMessage.id == message_id)
+            .limit(1)
+        )
+        res = await self.session.execute(stmt)
+        entity = res.scalar_one_or_none()
+        if not entity:
+            return
+        entity.delivery_status = new_status
+        await self.session.commit()

@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from src.api.health import router as health_router
 from src.api.webhooks.twilio import router as twilio_router
 from src.api.conversations import router as conversations_router
+from src.api.sms import router as sms_router
 from src.utils.config import get_settings
 
 
@@ -46,6 +47,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(twilio_router)
     app.include_router(conversations_router)
+    app.include_router(sms_router)
     return app
 
 

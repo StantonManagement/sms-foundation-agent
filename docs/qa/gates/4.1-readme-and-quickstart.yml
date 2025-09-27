@@ -1,0 +1,29 @@
+# <!-- Powered by BMAD™ Core -->
+schema: 1
+story: "4.1"
+story_title: "README and Quickstart"
+gate: "PASS"  # PASS|CONCERNS|FAIL|WAIVED
+status_reason: "AC1–3 met: README includes prerequisites, env vars summary, local run and deployment notes; Dockerfile and docker-compose present and referenced; quickstart verifies GET /health. Instructions are consistent with code and tests."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-09-27T00:00:00Z"
+
+waiver: { active: false }
+
+top_issues:
+  - id: "DOC-ENV-001"
+    severity: low
+    finding: "Optional Twilio send retry/backoff env vars are not documented in README."
+    suggested_action: "List TWILIO_SEND_MAX_RETRIES, TWILIO_SEND_BASE_BACKOFF_MS, and TWILIO_SEND_BACKOFF_CAP_MS in an Optional settings section for completeness."
+  - id: "DOC-CTR-001"
+    severity: low
+    finding: "Container run examples don’t mention passing secrets when needed."
+    suggested_action: "Add note about using --env-file .env or -e for Twilio credentials when running containers."
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 2 }
+  recommendations:
+    must_fix: []
+    monitor:
+      - "Keep README env vars in sync with Settings model to avoid drift"
+      - "Document container env passing if future quickstarts require secrets"
+
