@@ -1,0 +1,28 @@
+# <!-- Powered by BMAD™ Core -->
+schema: 1
+story: "2.4"
+story_title: "Unknown Number Handling and Later Reconciliation"
+gate: "PASS"  # PASS|CONCERNS|FAIL|WAIVED
+status_reason: "AC1–5 met: unknown inbound creates conversations/messages without tenant; later inbound or background reconciliation sets tenant on the same conversation without duplication. Idempotency enforced by MessageSid and unique canonical phone. Observability includes logs for lookup outcomes and reconciliation events; minor metrics coverage gaps noted for immediate known cases."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-09-26T00:00:08Z"
+
+waiver: { active: false }
+
+top_issues:
+  - id: "OBS-003"
+    severity: low
+    finding: "No metric increment when tenant is found during inbound (only logs). Unknown ratio may be understated since `unknown_conversation_created` fires on creation and `reconciliation_succeeded` covers background, but immediate-known cases lack a counter."
+    suggested_action: "Increment a metric on inbound when a tenant match occurs (e.g., `known_conversation_resolved`) and consider a per-message unknown counter if desired. Align naming with reconciliation metrics."
+  - id: "OBS-004"
+    severity: low
+    finding: "Reconciliation job returns a summary but does not emit a single summary log with processed/succeeded/no_match counts."
+    suggested_action: "Log an info-level summary event after a batch using the returned dict for operational visibility."
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 2 }
+  recommendations:
+    must_fix: []
+    monitor:
+      - "Track immediate-known vs reconciliation-resolved counts to observe trends"
+      - "Add reconciliation batch summary log for run-level visibility"

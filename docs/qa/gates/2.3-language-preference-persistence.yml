@@ -1,0 +1,29 @@
+# <!-- Powered by BMAD™ Core -->
+schema: 1
+story: "2.3"
+story_title: "Language Preference Persistence"
+gate: "PASS"  # PASS|CONCERNS|FAIL|WAIVED
+status_reason: "Meets AC 1–5 with conflict resolution by confidence, tenant-level last-known reuse, and resilient tenant profile updates with retry/backoff. Tests cover EN→ES transitions, detector heuristics for EN/ES/PT, and adapter retry/404; minor observability improvements suggested."
+reviewer: "Quinn (Test Architect)"
+updated: "2025-09-26T00:00:06Z"
+
+waiver: { active: false }
+
+top_issues:
+  - id: "OBS-001"
+    severity: low
+    finding: "Tenant profile update attempts/success not explicitly logged; chosen confidence not included in audit event."
+    suggested_action: "Log an info event on successful update and include chosen_confidence in the decision log."
+  - id: "TEST-001"
+    severity: low
+    finding: "Service-level transition tests cover EN→ES; PT transitions covered at detector-level only."
+    suggested_action: "Add a service test demonstrating ES→PT or EN→PT transition and profile update trigger."
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 2 }
+  recommendations:
+    must_fix: []
+    monitor:
+      - "Confirm equal-confidence tie behavior (latest wins) aligns with stakeholder intent"
+      - "Consider explicit success logging for external updates to aid auditability"
+

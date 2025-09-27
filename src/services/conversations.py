@@ -9,6 +9,11 @@ from sqlalchemy.exc import SQLAlchemyError, OperationalError
 from src.repositories.conversations import ConversationRepository
 from src.repositories.messages import MessageRepository
 from src.utils.phone import normalize_phone
+from src.adapters.metrics import Metrics
+import structlog
+
+
+logger = structlog.get_logger(__name__)
 
 
 @dataclass
@@ -63,3 +68,31 @@ class ConversationService:
             total = None
 
         return ConversationWithMessages(conversation=conv, messages=items, total=total)
+
+    async def reconcile_tenant(self, conversation_id: int, tenant_id: str) -> bool:
+        """Set tenant_id on an existing conversation if not already set.
+
+        Returns True if a change was applied; False if already set to the same value
+        or conversation not found.
+        """
+        try:
+            existing = await self.conversations.get_by_id(conversation_id)
+        except (OperationalError, SQLAlchemyError):
+            return False
+        if not existing:
+            return False
+
+        prev = existing.tenant_id
+        if prev == tenant_id:
+            # Idempotent no-op
+            return False
+
+        await self.conversations.set_tenant(conversation_id, tenant_id)
+        Metrics.inc("reconciliation_succeeded")
+        logger.info(
+            "reconciliation_succeeded",
+            conversation_id=conversation_id,
+            tenant_previous=prev,
+            tenant_new=tenant_id,
+        )
+        return True

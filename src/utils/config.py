@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     database_url: str = Field(default="sqlite+aiosqlite:///./app.db", alias="DATABASE_URL")
     # Collections Monitor base URL for tenant lookup
     monitor_api_url: str = Field(default="", alias="MONITOR_API_URL")
+    # Tenant Profile base URL for updating language preferences
+    tenant_profile_api_url: str = Field(default="", alias="TENANT_PROFILE_API_URL")
 
     model_config = SettingsConfigDict(
         env_file=".env",
